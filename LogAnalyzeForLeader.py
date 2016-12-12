@@ -31,30 +31,31 @@ def analyze_log(days, percentage_arr, log_dirs):
 	"""
 	:param days:        需要统计的天数
 	:param percentage_arr:  需要计算的百分位
-	:param log_dirs:    日志文件根路径
+	:param dir_tmp:    日志文件根路径
 	:return:
 	"""
 	count_dic = {}
 	days = sorted(days)
 	i = 1
 	while i <= days[-1]:
-		date_arr = re.split("-", str(datetime.date.today() + datetime.timedelta(days=-i)))
-		file_name = 'aston-access.' + "-".join(date_arr) + '.log'
-		file_path = os.path.join(log_dirs, file_name)
-		if os.path.exists(file_path) and os.path.isfile(file_path):
-			read_file(log_dirs, file_name, count_dic)
-			print(file_path)
-		else:
-			date_tmp = date_arr[0] + '-' + date_arr[1]
-			file_path = os.path.join(log_dirs + '/bak/' + date_tmp, file_name)
+		for dir_tmp in log_dirs:
+			date_arr = re.split("-", str(datetime.date.today() + datetime.timedelta(days=-i)))
+			file_name = 'aston-access.' + "-".join(date_arr) + '.log'
+			file_path = os.path.join(dir_tmp, file_name)
 			if os.path.exists(file_path) and os.path.isfile(file_path):
-				read_file(log_dirs + '/bak/' + date_tmp, file_name)
+				read_file(dir_tmp, file_name, count_dic)
 				print(file_path)
+			else:
+				date_tmp = date_arr[0] + '-' + date_arr[1]
+				file_path = os.path.join(dir_tmp + '/bak/' + date_tmp + '/aston-access/', file_name)
+				if os.path.exists(file_path) and os.path.isfile(file_path):
+					read_file(dir_tmp + '/bak/' + date_tmp + '/aston-access/', file_name, count_dic)
+					print(file_path)
 		if days.__contains__(i):
 			# 计算一次
 			cal_result_item(count_dic, i, percentage_arr, result)
 		i += 1
-	print_result()
+	print_result(result, days[-1])
 
 
 def read_file(dir_name, file_name, count_dic):
@@ -123,7 +124,7 @@ def cal_result_item(count_dic, n, percentage_arr, result_dic):
 		arr = count_dic[key][2]
 		sorted_arr = sorted(arr)
 		arr_len = len(sorted_arr)
-		line = {'name': key, 'latency': latency, 'count': count}
+		line = {'_1latency': str(latency) + 'ms', '_0count': count}
 		for x in percentage_arr:
 			index = cal_percentage_off(arr_len, x)
 			line[get_percentage_key(x)] = sorted_arr[index - 1]
@@ -144,22 +145,36 @@ def cal_percentage_off(arr_len, percentage):
 	return arr_len - int(round(arr_len * (1 - percentage)))
 
 
-def print_result():
+def print_result(result_param, n):
 	"""
 	打印最终结果result
+	:param result_param:    结果参数
+	:param n:               按照n天的数据字典中的count降序排序
 	:return:
 	"""
-	pass
+	res = sorted(result_param.items(), lambda x, y: cmp(x[1][n]['_0count'], y[1][n]['_0count']), reverse=True)
+	for item in res:
+		line_arr = [item[0]]
+		item_tmp = item[1].items()
+		item_tmp.sort()
+		for tmp in item_tmp:
+			line_arr.append(str(tmp[0]) + ':')
+			line_item = tmp[1]
+			line_tmp = line_item.items()
+			line_tmp.sort()
+			for it in line_tmp:
+				line_arr.append(it[1])
+		print(' '.join(str(x) for x in line_arr))
 
 
 def get_percentage_key(x):
 	"""
 	计算百分位对应在字典中的key, 例: "_95"
-	:param x:
+	:param x:result_param
 	:return:
 	"""
 	return '_' + str(int(x * 100))
 
 
 if __name__ == '__main__':
-	analyze_log([1, 7, 30, 35], [0.90, 0.95, 0.97, 0.99], '/Users/xiuc/Downloads/')
+	analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'])
