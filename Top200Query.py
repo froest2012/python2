@@ -40,7 +40,7 @@ def print_top_200():
 	if len(res) > 200:
 		res = res[:200]
 	for item in res:
-		print(item[0])
+		print('%s   %d' % (item[0], item[1]))
 
 
 def read_file(file_path, result_tmp):
