@@ -16,10 +16,14 @@
 		接口请求数
 	...
 """
+
 import datetime
 import os
 import os.path
 import re
+import sys
+import xlwt
+import json
 
 _percentage_90 = 0.90
 _percentage_95 = 0.95
@@ -27,11 +31,13 @@ _percentage_99 = 0.99
 result = {}
 
 
-def analyze_log(days, percentage_arr, log_dirs):
+def analyze_log(days, percentage_arr, log_dirs, out_file):
     """
-    :param days:        需要统计的天数
-    :param percentage_arr:  需要计算的百分位
-    :param dir_tmp:    日志文件根路径
+    分析日志
+    :param days:
+    :param percentage_arr:
+    :param log_dirs:
+    :param out_file:
     :return:
     """
     count_dic = {}
@@ -55,7 +61,8 @@ def analyze_log(days, percentage_arr, log_dirs):
             # 计算一次
             cal_result_item(count_dic, i, percentage_arr, result)
         i += 1
-    print_result(result, days[-1])
+    save_result_to_file(result, out_file)
+    # print_result(result, days[-1], out_file)
 
 
 def read_file(dir_name, file_name, count_dic):
@@ -76,10 +83,10 @@ def read_file(dir_name, file_name, count_dic):
                     it = count_dic[key]
                     time_arr = it[2]
                     time_arr.append(item.time)
-                    count_dic[key] = (it[0] + item.time, it[1] + 1, time_arr)  # (time, count, list)
+                    count_dic[key] = (it[0] + item.time, it[1] + 1, time_arr, it[3] + item.res)  # (time, count, list)
                 else:
                     time_arr.append(item.time)
-                    count_dic[key] = (item.time, 1, time_arr)
+                    count_dic[key] = (item.time, 1, time_arr, item.res)
 
 
 def analyze_line(line):
@@ -91,7 +98,7 @@ def analyze_line(line):
     if line.rfind(' success ') != -1:
         str_arr = re.split('[ ]', line)
         if len(str_arr) > 0:
-            return Item(str_arr[8], str_arr[9][:-2])
+            return Item(str_arr[8], str_arr[9][:-2], str_arr[11])
 
 
 class Item:
@@ -99,7 +106,7 @@ class Item:
     每行日志对应一个这种对象,用于计算
     """
 
-    def __init__(self, iname, time=0):
+    def __init__(self, iname, time=0, res=0):
         """
         :param iname:   接口名称
         :param time:    响应时间
@@ -107,6 +114,7 @@ class Item:
         """
         self.iname = iname
         self.time = int(time)
+        self.res = int(res)
 
 
 def cal_result_item(count_dic, n, percentage_arr, result_dic):
@@ -119,12 +127,13 @@ def cal_result_item(count_dic, n, percentage_arr, result_dic):
     :return:
     """
     for key in count_dic.keys():
-        latency = count_dic[key][0] / count_dic[key][1]
         count = count_dic[key][1]
+        latency = count_dic[key][0] / count
+        res_size = count_dic[key][3] / count
         arr = count_dic[key][2]
         sorted_arr = sorted(arr)
         arr_len = len(sorted_arr)
-        line = {'_1latency': str(latency) + 'ms', '_0count': count}
+        line = {'_1latency': str(latency) + 'ms', '_0count': count, '_2res': res_size}
         for x in percentage_arr:
             index = cal_percentage_off(arr_len, x)
             line[get_percentage_key(x)] = sorted_arr[index - 1]
@@ -145,13 +154,30 @@ def cal_percentage_off(arr_len, percentage):
     return arr_len - int(round(arr_len * (1 - percentage)))
 
 
-def print_result(result_param, n):
+def save_result_to_file(result_param, out_f):
+    """
+    把排序以后的元组写入文件,用于多个文件的合并再排序,然后生成xls
+    :param result_param:
+    :param n:
+    :param out_f:
+    :return:
+    """
+    file_tmp = open(out_f, 'w')
+    # res = sorted(result_param.items(), lambda x, y: cmp(x[1][n]['_0count'], y[1][n]['_0count']), reverse=True)
+    json_writer = json.JSONEncoder()
+    file_tmp.write(json_writer.encode(result_param))
+    file_tmp.close()
+
+
+def print_result(result_param, n, out_f):
     """
     打印最终结果result
     :param result_param:    结果参数
     :param n:               按照n天的数据字典中的count降序排序
+    :param out_f:
     :return:
     """
+    file_tmp = open(out_f, 'w')
     res = sorted(result_param.items(), lambda x, y: cmp(x[1][n]['_0count'], y[1][n]['_0count']), reverse=True)
     for item in res:
         line_arr = [item[0]]
@@ -164,7 +190,11 @@ def print_result(result_param, n):
             line_tmp.sort()
             for it in line_tmp:
                 line_arr.append(it[1])
-        print(' '.join(str(x) for x in line_arr))
+        line_arr.append('\n')
+        file_tmp.write(' '.join(str(x) for x in line_arr))
+    # json_writer = json.JSONEncoder()
+    # file_tmp.write(json_writer.encode(result_param))
+    file_tmp.close()
 
 
 def get_percentage_key(x):
@@ -177,4 +207,5 @@ def get_percentage_key(x):
 
 
 if __name__ == '__main__':
-    analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'])
+    out_file = sys.argv[1]
+    analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'], out_file)
