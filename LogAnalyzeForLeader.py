@@ -15,6 +15,8 @@
 	30天:
 		接口请求数
 	...
+
+	脚本调用方式: python script out_file log_file_name, protocl
 """
 
 import datetime
@@ -31,9 +33,10 @@ _percentage_99 = 0.99
 result = {}
 
 
-def analyze_log(days, percentage_arr, log_dirs, out_file):
+def analyze_log(days, percentage_arr, log_dirs, out_file, log_file_name_p, protocl_p):
     """
     分析日志
+    :param log_file_name_p:
     :param days:
     :param percentage_arr:
     :param log_dirs:
@@ -46,16 +49,17 @@ def analyze_log(days, percentage_arr, log_dirs, out_file):
     while i <= days[-1]:
         for dir_tmp in log_dirs:
             date_arr = re.split("-", str(datetime.date.today() + datetime.timedelta(days=-i)))
-            file_name = 'aston-access.' + "-".join(date_arr) + '.log'
+            file_name = log_file_name_p + '.' + "-".join(date_arr) + '.log'
             file_path = os.path.join(dir_tmp, file_name)
             if os.path.exists(file_path) and os.path.isfile(file_path):
-                read_file(dir_tmp, file_name, count_dic)
+                read_file(dir_tmp, file_name, count_dic, protocl_p)
                 print(file_path)
             else:
                 date_tmp = date_arr[0] + '-' + date_arr[1]
-                file_path = os.path.join(dir_tmp + '/bak/' + date_tmp + '/aston-access/', file_name)
+                file_path = os.path.join(dir_tmp + '/bak/' + date_tmp + '/' + log_file_name_p + '/', file_name)
                 if os.path.exists(file_path) and os.path.isfile(file_path):
-                    read_file(dir_tmp + '/bak/' + date_tmp + '/aston-access/', file_name, count_dic)
+                    read_file(dir_tmp + '/bak/' + date_tmp + '/' + log_file_name_p + '/', file_name, count_dic,
+                              protocl_p)
                     print(file_path)
         if days.__contains__(i):
             # 计算一次
@@ -65,7 +69,7 @@ def analyze_log(days, percentage_arr, log_dirs, out_file):
     # print_result(result, days[-1], out_file)
 
 
-def read_file(dir_name, file_name, count_dic):
+def read_file(dir_name, file_name, count_dic, protocl_p):
     """
     从文件一行行读入数据, 并分析每一行, 最后存到字典中
     :param dir_name:    文件夹路径
@@ -75,7 +79,7 @@ def read_file(dir_name, file_name, count_dic):
     """
     with open(os.path.join(dir_name, file_name), 'r') as f:
         for line in f:
-            item = analyze_line(line)
+            item = analyze_line(line, protocl_p)
             if item:
                 key = item.iname
                 time_arr = []
@@ -89,13 +93,19 @@ def read_file(dir_name, file_name, count_dic):
                     count_dic[key] = (item.time, 1, time_arr, item.res)
 
 
-def analyze_line(line):
+def analyze_line(line, protcol_p):
     """
     分析每一行数据,得到一个item
     :param line:
     :return:
     """
-    if line.rfind(' success ') != -1:
+    flag = False
+    if protcol_p == 'All':
+        flag = True
+    else:
+        if line.rfind(protcol_p) != -1:
+            flag = True
+    if line.rfind(' success ') != -1 and flag:
         str_arr = re.split('[ ]', line)
         if len(str_arr) > 0:
             return Item(str_arr[8], str_arr[9][:-2], str_arr[11])
@@ -208,4 +218,7 @@ def get_percentage_key(x):
 
 if __name__ == '__main__':
     out_file = sys.argv[1]
-    analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'], out_file)
+    log_file_name = sys.argv[2]
+    protocl = sys.argv[3]
+    analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'], out_file,
+                log_file_name, protocl)
