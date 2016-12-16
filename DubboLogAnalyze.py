@@ -186,7 +186,7 @@ class DubboLogAnalyze(object):
                     line_arr.append(it[1])
             line_arr.append('\n')
             file_tmp.write(' '.join(str(x) for x in line_arr))
-        # json_writer = json.JSONEncoder()
+        json_writer = json.JSONEncoder()
         # file_tmp.write(json_writer.encode(result_param))
         file_tmp.close()
 
