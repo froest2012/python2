@@ -10,12 +10,12 @@ from email.utils import formatdate
 from email import encoders
 from email.header import Header
 
-from_addr = 'search@notice.weichedao.com'
-passwd = 'eoKxVIeClc0hsEqQ'
+from_addr = 'xxxx'
+passwd = 'xx'
 smtp_server = 'smtpdm.aliyun.com'
 smtp_port = 25
 
-to_addr_list = ['jiangshou.hong@tqmall.com', 'hang.lou@tqmall.com']
+to_addr_list = ['xx', 'xx']
 file_path_list = ['/Users/xiuc/Downloads/request_analyze_result.xls',
                   '/Users/xiuc/Downloads/request_analyze_result.xls']
 cc = []
