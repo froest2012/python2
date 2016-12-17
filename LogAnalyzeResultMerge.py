@@ -11,8 +11,8 @@ import mail
 from email.header import Header
 
 
-from_addr = 'search@notice.weichedao.com'
-passwd = 'eoKxVIeClc0hsEqQ'
+from_addr = 'xx'
+passwd = 'xx'
 smtp_server = 'smtpdm.aliyun.com'
 smtp_port = 25
 to_addr_list = []
