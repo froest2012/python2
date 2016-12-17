@@ -25,6 +25,7 @@ import os.path
 import re
 import sys
 import json
+import shutil
 
 result = {}
 
@@ -110,9 +111,10 @@ class DubboLogAnalyze(object):
         :param line:
         :return:
         """
-        str_arr = re.split('[ ]', line)
-        if len(str_arr) > 0:
-            return Item(str_arr[8], str_arr[9][:-2], str_arr[11])
+        if line.find(' success ') != -1 and line.find('dubbo:') != -1:
+            str_arr = re.split('[ ]', line)
+            if len(str_arr) > 0:
+                return Item(str_arr[8], str_arr[9][:-2], str_arr[11])
 
     def cal_result_item(self, count_dic, n, percentage_arr, result_dic):
         """
@@ -206,3 +208,4 @@ if __name__ == '__main__':
     dubbo_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
                                   out_file,
                                   bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
+    shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")

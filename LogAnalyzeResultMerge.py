@@ -6,6 +6,18 @@ import os.path
 import json
 import sys
 import xlwt
+import datetime
+import mail
+from email.header import Header
+
+
+from_addr = 'search@notice.weichedao.com'
+passwd = 'eoKxVIeClc0hsEqQ'
+smtp_server = 'smtpdm.aliyun.com'
+smtp_port = 25
+to_addr_list = []
+file_path_list = []
+cc = []
 
 
 def read_files(dir_path):
@@ -15,7 +27,6 @@ def read_files(dir_path):
         for file_path in os.listdir(dir_path):
             ss = open(os.path.join(dir_path, file_path), 'r').read()
             file_dic = json_reader.decode(ss)
-            print(file_dic)
             result_dic = dict(result_dic, **file_dic)
     return result_dic
 
@@ -60,9 +71,8 @@ def save_to_xls(res_tmp, file_path):
         j += 1
         k = 0
         sub_lines = sorted(_3line[1].items(), key=lambda x: int(x[0]))
-        cnt_continue = 3 - len(sub_lines)
+        k += 3 - len(sub_lines)
         for _line_key in sub_lines:
-            k += cnt_continue
             m = 0
             _sheet.write(i + k, j + m, _line_key[0])
             m += 1
@@ -102,9 +112,27 @@ def request_name_style():
     return style
 
 
+def save_res(res_tmp, save_res_path):
+    """
+    把每天的分析结果保存到文件, 以便日后分析统计
+    :param res_tmp:
+    :param save_res_path:
+    :return:
+    """
+    json_write = json.JSONEncoder()
+    with open(os.path.join(save_res_path, 'log_analyze_res.' + str(datetime.date.today())) + '.log', 'w') as f:
+        f.write(json_write.encode(res_tmp))
+
+
 if __name__ == '__main__':
     files_dir = sys.argv[1]
     file_path = sys.argv[2]
+    save_res_path = sys.argv[3]
     result_dic = read_files(files_dir)
     res_tmp = sort_result(result_dic)
-    save_to_xls(res_tmp, file_path)
+    save_res(res_tmp, save_res_path)
+    file_name = file_path + '.' + str(datetime.date.today()) + '.xls'
+    save_to_xls(res_tmp, file_name)
+    file_path_list.append(file_name)
+    mail.send_mail(from_addr, to_addr_list, cc, Header('搜索请求日志分析报告' + str(datetime.date.today()), 'utf-8').encode(), '', file_path_list, smtp_server, smtp_port, from_addr, passwd, False)
+

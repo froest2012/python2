@@ -3,6 +3,7 @@
 
 import re
 import sys
+import shutil
 from DubboLogAnalyze import DubboLogAnalyze
 from DubboLogAnalyze import Item
 
@@ -32,3 +33,4 @@ if __name__ == '__main__':
     http_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
                                  out_file,
                                  bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
+    shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")
