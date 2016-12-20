@@ -26,6 +26,7 @@ import re
 import sys
 import json
 import shutil
+import traceback
 
 result = {}
 
@@ -66,14 +67,12 @@ class DubboLogAnalyze(object):
                 file_path = os.path.join(dir_tmp, file_name)
                 if os.path.exists(file_path) and os.path.isfile(file_path):
                     self.read_file(dir_tmp, file_name, count_dic)
-                    print(file_path)
                 else:
                     date_tmp = date_arr[0] + '-' + date_arr[1]
                     file_path = os.path.join(dir_tmp + '/bak/' + date_tmp + '/' + bak_dir_name + '/', file_name)
                     if os.path.exists(file_path) and os.path.isfile(file_path):
                         self.read_file(dir_tmp + '/bak/' + date_tmp + '/' + bak_dir_name + '/', file_name,
                                        count_dic)
-                        print(file_path)
             if days.__contains__(i):
                 # 计算一次
                 self.cal_result_item(count_dic, i, percentage_arr, result)
@@ -202,10 +201,14 @@ class DubboLogAnalyze(object):
 
 
 if __name__ == '__main__':
-    out_file = sys.argv[1]
-    bak_dir_name = sys.argv[2]
-    dubbo_log_analyze = DubboLogAnalyze()
-    dubbo_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
-                                  out_file,
-                                  bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
-    shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")
+    try:
+        out_file = sys.argv[1]
+        bak_dir_name = sys.argv[2]
+        dubbo_log_analyze = DubboLogAnalyze()
+        dubbo_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
+                                      out_file,
+                                      bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
+        shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")
+    except Exception, e:
+        print(e)
+        traceback.print_exc()

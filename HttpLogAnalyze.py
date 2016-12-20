@@ -6,6 +6,7 @@ import sys
 import shutil
 from DubboLogAnalyze import DubboLogAnalyze
 from DubboLogAnalyze import Item
+import traceback
 
 
 class HttpLogAnalyze(DubboLogAnalyze):
@@ -23,14 +24,17 @@ class HttpLogAnalyze(DubboLogAnalyze):
                 return Item(str_arr[-5][:str_arr[-5].find('?')], int(str_arr[-1][:-1]), int(str_arr[-2]))
         except Exception, e:
             print(e)
-            print(str_arr)
 
 
 if __name__ == '__main__':
-    out_file = sys.argv[1]
-    bak_dir_name = sys.argv[2]
-    http_log_analyze = HttpLogAnalyze()
-    http_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
-                                 out_file,
-                                 bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
-    shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")
+    try:
+        out_file = sys.argv[1]
+        bak_dir_name = sys.argv[2]
+        http_log_analyze = HttpLogAnalyze()
+        http_log_analyze.analyze_log([1, 7, 30], [0.90, 0.95, 0.99], ['/Users/xiuc/Downloads/', '/Users/xiuc/Downloads/'],
+                                     out_file,
+                                     bak_dir_name, '.log' if bak_dir_name == 'aston-access' else '.txt')
+        shutil.move(out_file, "/usr/local/Appserver_tmpdir/request_analyze/")
+    except Exception, e:
+        print(e)
+        traceback.print_exc()

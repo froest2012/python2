@@ -9,15 +9,41 @@ import xlwt
 import datetime
 import mail
 from email.header import Header
+import traceback
 
 
-from_addr = 'xx'
-passwd = 'xx'
-smtp_server = 'smtpdm.aliyun.com'
+from_addr = 'xxxx'
+passwd = 'xxxx'
+smtp_server = 'xxxx'
 smtp_port = 25
-to_addr_list = []
+to_addr_list = ['xxx']
 file_path_list = []
 cc = []
+
+
+def merge_res_dict(result_dic, file_dic):
+    for key in file_dic:
+        res_item = file_dic[key]
+        if not result_dic.get(key):
+            result_dic[key] = res_item
+        else:
+            it = result_dic[key]
+            for line_key in res_item:
+                line_item = res_item[line_key]
+                if not it.get(line_key):
+                    it[line_key] = line_item
+                else:
+                    it_item = it[line_key]
+                    for attr_key in line_item:
+                        if attr_key == '_1latency':
+                            it_item[attr_key] = str((int(it_item[attr_key][:-2]) + int(line_item[attr_key][:-2])) / 2) + 'ms'
+                        elif attr_key == '_0count':
+                            it_item[attr_key] = it_item[attr_key] + line_item[attr_key]
+                        elif attr_key == '_2res':
+                            it_item[attr_key] = (it_item[attr_key] + line_item[attr_key]) / 2
+                        else:
+                            if it_item[attr_key] < line_item[attr_key]:
+                                it_item[attr_key] = line_item[attr_key]
 
 
 def read_files(dir_path):
@@ -27,7 +53,7 @@ def read_files(dir_path):
         for file_path in os.listdir(dir_path):
             ss = open(os.path.join(dir_path, file_path), 'r').read()
             file_dic = json_reader.decode(ss)
-            result_dic = dict(result_dic, **file_dic)
+            merge_res_dict(result_dic, file_dic)
     return result_dic
 
 
@@ -125,14 +151,19 @@ def save_res(res_tmp, save_res_path):
 
 
 if __name__ == '__main__':
-    files_dir = sys.argv[1]
-    file_path = sys.argv[2]
-    save_res_path = sys.argv[3]
-    result_dic = read_files(files_dir)
-    res_tmp = sort_result(result_dic)
-    save_res(res_tmp, save_res_path)
-    file_name = file_path + '.' + str(datetime.date.today()) + '.xls'
-    save_to_xls(res_tmp, file_name)
-    file_path_list.append(file_name)
-    mail.send_mail(from_addr, to_addr_list, cc, Header('搜索请求日志分析报告' + str(datetime.date.today()), 'utf-8').encode(), '', file_path_list, smtp_server, smtp_port, from_addr, passwd, False)
+    try:
+        files_dir = sys.argv[1]
+        file_path = sys.argv[2]
+        save_res_path = sys.argv[3]
+        result_dic = read_files(files_dir)
+        res_tmp = sort_result(result_dic)
+        save_res(res_tmp, save_res_path)
+        file_name = file_path + '.' + str(datetime.date.today()) + '.xls'
+        save_to_xls(res_tmp, file_name)
+        file_path_list.append(file_name)
+        mail.send_mail(from_addr, to_addr_list, cc, Header('搜索请求日志分析报告' + str(datetime.date.today()), 'utf-8').encode(), '', file_path_list, smtp_server, smtp_port, from_addr, passwd, False)
+    except Exception, e:
+        print(e)
+        traceback.print_exc()
+
 
