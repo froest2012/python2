@@ -12,11 +12,12 @@ from email.header import Header
 import traceback
 
 
-from_addr = 'xxxx'
-passwd = 'xxxx'
-smtp_server = 'xxxx'
+from_addr = ''
+passwd = ''
+smtp_server = ''
 smtp_port = 25
-to_addr_list = ['xxx']
+
+to_addr_list = ['']
 file_path_list = []
 cc = []
 
