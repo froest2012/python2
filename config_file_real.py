@@ -3,5 +3,5 @@
 
 # 测试环境
 host = [
-    ['tqmall.es', '10.160.16.177', '/data/es_server/tomcat']
+    ['tqmall.es', '10.160.16.177', '/data/es_server/tomcat', 'tomcat']
 ]
