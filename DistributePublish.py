@@ -66,7 +66,6 @@ try:
         print(code)
     else:
         # 把war分发到各个服务器
-        #pdb.set_trace()
         if valid == 'valid':
             scp_war(hosts[0], hosts[0][4], hosts[0][3])
         elif valid == 'all':
