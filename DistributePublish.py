@@ -73,7 +73,7 @@ try:
         # pdb.set_trace()
         if valid == 'valid':
             scp_war(hosts[0], hosts[0][4], hosts[0][3])
-        elif valid == 'valid':
+        elif valid == 'all':
             for item in hosts:
                 scp_war(item, item[4], item[3])
 except subprocess.CalledProcessError as e:
