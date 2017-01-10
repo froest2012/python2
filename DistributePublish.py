@@ -51,6 +51,8 @@ def scp_war(host_arr, war_name, app):
         server.xiuc.move_file(waiting_bak_file, bak_file)
         print('move ' + directory + '/' + war_name + '.war to ' + waiting_bak_file)
         server.xiuc.move_file(directory + '/' + war_name + '.war', waiting_bak_file)
+        print('rm project dir in webapps:' + app_file_dir + '/' + war_name)
+        server.xiuc.sysexec('rm -rf ' + app_file_dir + '/' + war_name)
         try:
             print('stop running app:' + app)
             if server.supervisor.stopProcess(app):
@@ -71,7 +73,7 @@ try:
         # pdb.set_trace()
         if valid == 'valid':
             scp_war(hosts[0], hosts[0][4], hosts[0][3])
-        else:
+        elif valid == 'valid':
             for item in hosts:
                 scp_war(item, item[4], item[3])
 except subprocess.CalledProcessError as e:
