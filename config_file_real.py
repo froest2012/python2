@@ -7,5 +7,5 @@
 """
 # 测试环境
 host = [
-    ['tqmall.es', '10.160.16.177', '/data/es_server/tomcat', 'tomcat', 'elasticsearch']
+    ['tqmall.es', 'your server ip', '/data/tomcat', 'supervisor app name', 'war name']
 ]
