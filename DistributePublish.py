@@ -1,19 +1,17 @@
 #!/usr/bin/env python
-# encoding=utf8
-
+# -*- coding:utf-8 -*-
 import datetime
 import pdb
 import sys
 import os
 import subprocess
 import xmlrpclib
-import config_file_real
+import importlib
 
 """
 分布式发布脚本
 
 """
-hosts = config_file_real.host
 # 如果valid='valid',则只发布服务器列表中的第一个机器，否则发布所有服务器
 valid = 'valid'
 config_env = ''
@@ -28,6 +26,11 @@ def copy_config(antx_env):
     the_antx_properties_file = config_folder + '/antx.properties'
     os.system('cp ' + the_config_file_py + ' ./bin/config_file_real.py')
     os.system('cp ' + the_antx_properties_file + ' ./')
+
+
+copy_config(config_env)
+config_file_real = importlib.import_module('config_file_real')
+hosts = config_file_real.host
 
 
 def scp_war(host_arr, war_name, app):
@@ -60,15 +63,15 @@ def scp_war(host_arr, war_name, app):
 
 
 try:
-    copy_config(config_env)
     code = subprocess.check_call(["mvn", "clean", "install", "-Dmaven.test.skip", "-U"])
     if code != 0:
         print(code)
     else:
         # 把war分发到各个服务器
+        # pdb.set_trace()
         if valid == 'valid':
             scp_war(hosts[0], hosts[0][4], hosts[0][3])
-        elif valid == 'all':
+        else:
             for item in hosts:
                 scp_war(item, item[4], item[3])
 except subprocess.CalledProcessError as e:
